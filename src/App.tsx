@@ -1,4 +1,5 @@
 
+import React from 'react'; // Make sure React is explicitly imported
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,49 +17,59 @@ import ContatoPage from "./pages/ContatoPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 
-const queryClient = new QueryClient();
+// Create a client with explicit configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/contato" element={<ContatoPage />} />
-            
-            {/* Rotas protegidas - usuários autenticados */}
-            <Route path="/admin" element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            } />
-            <Route path="/admin/anuncios" element={
-              <AdminRoute>
-                <AnunciosAdmin />
-              </AdminRoute>
-            } />
-            <Route path="/admin/usuarios" element={
-              <AdminRoute>
-                <UsuariosAdmin />
-              </AdminRoute>
-            } />
-            <Route path="/admin/pendentes" element={
-              <AdminRoute>
-                <PendingAnuncios />
-              </AdminRoute>
-            } />
-            
-            {/* Rota 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/contato" element={<ContatoPage />} />
+              
+              {/* Rotas protegidas - usuários autenticados */}
+              <Route path="/admin" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } />
+              <Route path="/admin/anuncios" element={
+                <AdminRoute>
+                  <AnunciosAdmin />
+                </AdminRoute>
+              } />
+              <Route path="/admin/usuarios" element={
+                <AdminRoute>
+                  <UsuariosAdmin />
+                </AdminRoute>
+              } />
+              <Route path="/admin/pendentes" element={
+                <AdminRoute>
+                  <PendingAnuncios />
+                </AdminRoute>
+              } />
+              
+              {/* Rota 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
