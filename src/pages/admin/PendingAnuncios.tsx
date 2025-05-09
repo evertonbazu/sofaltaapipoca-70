@@ -11,8 +11,24 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useState } from "react";
 import { Anuncio, Usuario } from "@/types/databaseTypes";
 
-type AnuncioWithUsuario = Omit<Anuncio, 'usuarios'> & { 
-  usuarios?: Pick<Usuario, 'nome' | 'email'> 
+// Definir o tipo AnuncioWithUsuario para corresponder exatamente ao formato dos dados retornados pela API
+type AnuncioWithUsuario = {
+  id: string;
+  titulo: string;
+  descricao: string;
+  imagem?: string;
+  status: 'pendente' | 'aprovado' | 'rejeitado';
+  usuario_id: string;
+  created_at?: string;
+  valor?: string;
+  quantidade_vagas?: number;
+  tipo_acesso?: string;
+  pix?: string;
+  data_criacao?: string;
+  codigo?: string;
+  telegram?: string;
+  whatsapp?: string;
+  usuarios?: { nome?: string; email?: string };
 };
 
 const PendingAnuncios = () => {
@@ -32,12 +48,12 @@ const PendingAnuncios = () => {
       
       if (error) throw error;
       
-      // Usando as-unknown-as para contornar o problema de tipo
+      // Convertendo para o tipo correto
       return data as unknown as AnuncioWithUsuario[];
     }
   });
   
-  const handleViewDetails = (anuncio: Anuncio) => {
+  const handleViewDetails = (anuncio: AnuncioWithUsuario) => {
     setSelectedAnuncio(anuncio);
     setIsDialogOpen(true);
   };

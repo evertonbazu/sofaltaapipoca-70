@@ -24,7 +24,7 @@ export interface Anuncio {
   telegram?: string;
   whatsapp?: string;
   // Adding relation for TypeScript to recognize nested queries
-  usuarios?: Partial<Usuario>;
+  usuarios?: { nome: string; email: string; };
 }
 
 export interface Contato {
