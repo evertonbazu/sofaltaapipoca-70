@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,8 +27,7 @@ const anuncioSchema = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   descricao: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
   valor: z.string().min(1, "Valor é obrigatório"),
-  quantidade_vagas: z.string()
-    .transform((val) => parseInt(val, 10))
+  quantidade_vagas: z.coerce.number()
     .refine((val) => !isNaN(val) && val > 0, "Quantidade deve ser um número positivo"),
   tipo_acesso: z.string().min(1, "Tipo de acesso é obrigatório"),
   pix: z.string().optional(),
@@ -59,7 +57,7 @@ const AnuncioFormPage = () => {
       titulo: "",
       descricao: "",
       valor: "",
-      quantidade_vagas: "1",
+      quantidade_vagas: 1,
       tipo_acesso: "",
       pix: "",
       telegram: "",
@@ -83,7 +81,7 @@ const AnuncioFormPage = () => {
         titulo: data.titulo,
         descricao: data.descricao,
         valor: data.valor,
-        quantidade_vagas: data.quantidade_vagas, // This is now explicitly converted to a number by zod
+        quantidade_vagas: data.quantidade_vagas, // Now properly typed as a number
         tipo_acesso: data.tipo_acesso,
         pix: data.pix || null,
         telegram: data.telegram || null,
