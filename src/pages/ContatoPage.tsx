@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/sonner";
 import { Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Contato } from '@/types/databaseTypes';
+import { Database } from '@/integrations/supabase/types';
 
 const contatoSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -53,8 +54,9 @@ const ContatoPage = () => {
         if (createError) throw createError;
       }
       
-      // Inserir o contato
-      const novoContato: Partial<Contato> = {
+      // Inserir o contato - Use the properly typed insert object
+      // Instead of using Partial<Contato>, we'll create an object that matches the required Supabase schema
+      const novoContato: Database['public']['Tables']['contato']['Insert'] = {
         nome: data.nome,
         email: data.email,
         mensagem: data.mensagem,
@@ -63,7 +65,7 @@ const ContatoPage = () => {
       
       const { error } = await supabase
         .from('contato')
-        .insert([novoContato]);
+        .insert(novoContato);
       
       if (error) throw error;
       
