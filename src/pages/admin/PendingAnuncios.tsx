@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useState } from "react";
 import { Anuncio, Usuario } from "@/types/databaseTypes";
 
-type AnuncioWithUsuario = Anuncio & { 
+type AnuncioWithUsuario = Omit<Anuncio, 'usuarios'> & { 
   usuarios?: Pick<Usuario, 'nome' | 'email'> 
 };
 
@@ -31,7 +31,9 @@ const PendingAnuncios = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as AnuncioWithUsuario[];
+      
+      // Usando as-unknown-as para contornar o problema de tipo
+      return data as unknown as AnuncioWithUsuario[];
     }
   });
   

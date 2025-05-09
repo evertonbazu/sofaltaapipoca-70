@@ -15,8 +15,16 @@ export interface Anuncio {
   status: 'pendente' | 'aprovado' | 'rejeitado';
   usuario_id: string;
   created_at?: string;
+  valor?: string;
+  quantidade_vagas?: number;
+  tipo_acesso?: string;
+  pix?: string;
+  data_criacao?: string;
+  codigo?: string;
+  telegram?: string;
+  whatsapp?: string;
   // Adding relation for TypeScript to recognize nested queries
-  usuarios?: Usuario;
+  usuarios?: Partial<Usuario>;
 }
 
 export interface Contato {

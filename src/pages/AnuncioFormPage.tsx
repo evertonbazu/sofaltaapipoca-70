@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ const AnuncioFormPage = () => {
         titulo: data.titulo,
         descricao: data.descricao,
         valor: data.valor,
-        quantidade_vagas: data.quantidade_vagas,
+        quantidade_vagas: data.quantidade_vagas, // Agora é um número após a transformação do zod
         tipo_acesso: data.tipo_acesso,
         pix: data.pix || null,
         telegram: data.telegram || null,

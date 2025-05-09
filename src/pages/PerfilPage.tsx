@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Navbar } from "@/components/ui/navbar";
 import { format } from "date-fns";
 import { Anuncio } from "@/types/databaseTypes";
+import { Link } from "react-router-dom";
 
 const perfilSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -88,7 +88,9 @@ const PerfilPage = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      // Vamos garantir que os dados estejam no formato correto do tipo Anuncio
+      return data as Anuncio[];
     },
     enabled: !!user,
   });
