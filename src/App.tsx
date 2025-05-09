@@ -16,6 +16,8 @@ import PendingAnuncios from "./pages/admin/PendingAnuncios";
 import ContatoPage from "./pages/ContatoPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
+import PerfilPage from "./pages/PerfilPage";
+import AnuncioFormPage from "./pages/AnuncioFormPage";
 
 // Create a client with explicit configuration
 const queryClient = new QueryClient({
@@ -39,8 +41,16 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/contato" element={<ContatoPage />} />
+              <Route path="/enviar-anuncio" element={<AnuncioFormPage />} />
               
               {/* Rotas protegidas - usuários autenticados */}
+              <Route path="/perfil" element={
+                <ProtectedRoute>
+                  <PerfilPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Rotas protegidas - administradores */}
               <Route path="/admin" element={
                 <AdminRoute>
                   <AdminDashboard />

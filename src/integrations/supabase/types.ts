@@ -9,33 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      anuncios: {
+      alteracao_senha: {
         Row: {
-          created_at: string
-          descricao: string
           id: string
-          imagem: string | null
-          status: string
-          titulo: string
+          solicitado_em: string
           usuario_id: string
         }
         Insert: {
-          created_at?: string
-          descricao: string
           id?: string
-          imagem?: string | null
-          status: string
-          titulo: string
+          solicitado_em?: string
           usuario_id: string
         }
         Update: {
+          id?: string
+          solicitado_em?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alteracao_senha_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anuncios: {
+        Row: {
+          codigo: string | null
+          created_at: string
+          data_criacao: string | null
+          descricao: string
+          id: string
+          imagem: string | null
+          pix: string | null
+          quantidade_vagas: number | null
+          status: string
+          telegram: string | null
+          tipo_acesso: string | null
+          titulo: string
+          usuario_id: string
+          valor: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          codigo?: string | null
           created_at?: string
+          data_criacao?: string | null
+          descricao: string
+          id?: string
+          imagem?: string | null
+          pix?: string | null
+          quantidade_vagas?: number | null
+          status: string
+          telegram?: string | null
+          tipo_acesso?: string | null
+          titulo: string
+          usuario_id: string
+          valor?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          codigo?: string | null
+          created_at?: string
+          data_criacao?: string | null
           descricao?: string
           id?: string
           imagem?: string | null
+          pix?: string | null
+          quantidade_vagas?: number | null
           status?: string
+          telegram?: string | null
+          tipo_acesso?: string | null
           titulo?: string
           usuario_id?: string
+          valor?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {

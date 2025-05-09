@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, CheckCircle, Settings, Home, LogOut } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Navbar } from "@/components/ui/navbar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -21,27 +22,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <header className="bg-white border-b p-4 flex justify-between items-center shadow-sm">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          >
-            {isSidebarOpen ? <span>×</span> : <span>☰</span>}
-          </Button>
-          <h1 className="text-xl font-bold">Painel Administrativo</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">Olá, {user?.user_metadata?.nome || 'Administrador'}</span>
-          <Button variant="outline" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sair
-          </Button>
-        </div>
-      </header>
+      <Navbar />
       
-      <div className="flex flex-1">
+      <div className="flex-1 flex">
         <Collapsible open={isSidebarOpen} onOpenChange={setIsSidebarOpen} className="h-full">
           <CollapsibleContent forceMount className={`${isSidebarOpen ? 'w-64' : 'w-0'} overflow-hidden transition-all duration-300 bg-white border-r shadow-sm h-full`}>
             <div className="py-4 flex flex-col h-full">
@@ -103,9 +86,27 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           </CollapsibleContent>
         </Collapsible>
         
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+        <div className="flex flex-col flex-1">
+          <header className="bg-white border-b p-4 flex justify-between items-center shadow-sm">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
+                {isSidebarOpen ? <span>×</span> : <span>☰</span>}
+              </Button>
+              <h1 className="text-xl font-bold">Painel Administrativo</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">Olá, {user?.user_metadata?.nome || 'Administrador'}</span>
+            </div>
+          </header>
+          
+          <main className="flex-1 p-6">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
