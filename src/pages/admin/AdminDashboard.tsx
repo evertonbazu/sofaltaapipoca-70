@@ -14,7 +14,7 @@ const AdminDashboard = () => {
         .select('*', { count: 'exact', head: true });
       
       if (error) throw error;
-      return count;
+      return count || 0;
     }
   });
 
@@ -26,7 +26,7 @@ const AdminDashboard = () => {
         .select('*', { count: 'exact', head: true });
       
       if (error) throw error;
-      return count;
+      return count || 0;
     }
   });
 
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
         .eq('status', 'pendente');
       
       if (error) throw error;
-      return count;
+      return count || 0;
     }
   });
 
@@ -51,7 +51,7 @@ const AdminDashboard = () => {
         .select('*', { count: 'exact', head: true });
       
       if (error) throw error;
-      return count;
+      return count || 0;
     }
   });
 

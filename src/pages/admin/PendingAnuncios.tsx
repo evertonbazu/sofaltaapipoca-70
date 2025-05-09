@@ -9,11 +9,15 @@ import { Loader } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Anuncio } from "@/types/databaseTypes";
+import { Anuncio, Usuario } from "@/types/databaseTypes";
+
+type AnuncioWithUsuario = Anuncio & { 
+  usuarios?: Pick<Usuario, 'nome' | 'email'> 
+};
 
 const PendingAnuncios = () => {
   const queryClient = useQueryClient();
-  const [selectedAnuncio, setSelectedAnuncio] = useState<Anuncio | null>(null);
+  const [selectedAnuncio, setSelectedAnuncio] = useState<AnuncioWithUsuario | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -27,7 +31,7 @@ const PendingAnuncios = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as (Anuncio & { usuarios: { nome: string, email: string } })[];
+      return data as AnuncioWithUsuario[];
     }
   });
   

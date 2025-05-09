@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
+import { Usuario } from '@/types/databaseTypes';
 
 export interface AuthContextType {
   session: Session | null;
@@ -107,16 +108,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Adicionar o usuário à tabela usuarios
       if (data.user) {
+        const newUser: Usuario = {
+          id: data.user.id,
+          email,
+          nome,
+          classe: 'membro'
+        };
+
         const { error: insertError } = await supabase
           .from('usuarios')
-          .insert([
-            {
-              id: data.user.id,
-              email,
-              nome,
-              classe: 'membro'
-            }
-          ]);
+          .insert([newUser]);
 
         if (insertError) throw insertError;
       }

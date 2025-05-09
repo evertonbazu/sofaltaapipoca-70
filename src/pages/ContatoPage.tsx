@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Contato } from '@/types/databaseTypes';
 
 const contatoSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -53,14 +54,16 @@ const ContatoPage = () => {
       }
       
       // Inserir o contato
+      const novoContato: Partial<Contato> = {
+        nome: data.nome,
+        email: data.email,
+        mensagem: data.mensagem,
+        status: 'não lido',
+      };
+      
       const { error } = await supabase
         .from('contato')
-        .insert([{
-          nome: data.nome,
-          email: data.email,
-          mensagem: data.mensagem,
-          status: 'não lido',
-        }]);
+        .insert([novoContato]);
       
       if (error) throw error;
       

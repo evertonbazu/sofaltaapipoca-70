@@ -15,6 +15,8 @@ export interface Anuncio {
   status: 'pendente' | 'aprovado' | 'rejeitado';
   usuario_id: string;
   created_at?: string;
+  // Adding relation for TypeScript to recognize nested queries
+  usuarios?: Usuario;
 }
 
 export interface Contato {
@@ -25,3 +27,6 @@ export interface Contato {
   status: 'não lido' | 'lido';
   created_at?: string;
 }
+
+// This is the type for non-null assertions
+export type NonNullable<T> = T extends null | undefined ? never : T;

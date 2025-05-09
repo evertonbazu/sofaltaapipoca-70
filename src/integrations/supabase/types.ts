@@ -9,13 +9,112 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      anuncios: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          imagem: string | null
+          status: string
+          titulo: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          imagem?: string | null
+          status: string
+          titulo: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          imagem?: string | null
+          status?: string
+          titulo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anuncios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contato: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          mensagem: string
+          nome: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          mensagem: string
+          nome: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          mensagem?: string
+          nome?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      usuarios: {
+        Row: {
+          classe: string
+          created_at: string
+          email: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          classe: string
+          created_at?: string
+          email: string
+          id: string
+          nome: string
+        }
+        Update: {
+          classe?: string
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_anuncios_table_if_not_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_contato_table_if_not_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_usuarios_table_if_not_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
