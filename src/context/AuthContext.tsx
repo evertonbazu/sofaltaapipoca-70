@@ -127,21 +127,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
-      // Adicionar o usuário à tabela usuarios
-      if (data.user) {
-        const newUser: Usuario = {
-          id: data.user.id,
-          email,
-          nome,
-          classe: 'membro'
-        };
-
-        const { error: insertError } = await supabase
-          .from('usuarios')
-          .insert([newUser]);
-
-        if (insertError) throw insertError;
-      }
+      // O trigger criado no banco de dados vai inserir automaticamente 
+      // o usuário na tabela usuarios quando ele se cadastrar
       
       toast.success('Cadastro realizado com sucesso! Agora você pode fazer login.');
       navigate('/auth');

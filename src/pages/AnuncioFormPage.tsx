@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +45,7 @@ const anuncioSchema = z.object({
 type AnuncioFormValues = z.infer<typeof anuncioSchema>;
 
 const AnuncioFormPage = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [codigo] = useState(gerarCodigo());
   const [dataAtual] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -78,7 +77,7 @@ const AnuncioFormPage = () => {
       setIsSubmitting(true);
       
       // Preparar objeto para inserção no banco de dados
-      const novoAnuncio: Database['public']['Tables']['anuncios']['Insert'] = {
+      const novoAnuncio = {
         titulo: data.titulo,
         descricao: data.descricao,
         valor: data.valor,
