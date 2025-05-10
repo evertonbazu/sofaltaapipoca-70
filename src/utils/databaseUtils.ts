@@ -1,7 +1,11 @@
 
 import { Usuario, Anuncio, Contato } from '@/types/databaseTypes';
 
+// Link da planilha para salvar, adicionar, editar e excluir os dados dos anúncios
+// https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing
+
 // Banco de dados em memória para armazenar os dados da aplicação
+// Em uma aplicação real, esses dados estariam armazenados em um banco de dados ou na planilha do Google
 const localDB = {
   usuarios: [
     {
@@ -44,21 +48,22 @@ const localDB = {
   anuncios: [
     {
       id: "1",
+      codigo: "SF10001",
       titulo: "Netflix Premium",
       descricao: "Acesso completo a todas as séries e filmes do catálogo Netflix",
       imagem: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1000&auto=format&fit=crop",
-      status: "aprovado" as const,
+      status: "assinado" as const,
       usuario_id: "2",
       created_at: new Date().toISOString(),
       valor: "R$ 15,00",
       quantidade_vagas: 3,
-      tipo_acesso: "Premium",
-      pix: "12345678901",
-      telegram: "joaosilva",
-      whatsapp: "5511987654321"
+      tipo_envio: "login e senha" as const,
+      telegram: "@joaosilva",
+      whatsapp: "+5511987654321"
     },
     {
       id: "2",
+      codigo: "SF10002",
       titulo: "Spotify Família",
       descricao: "Compartilhe sua conta Spotify com até 5 pessoas",
       imagem: "https://images.unsplash.com/photo-1611339555312-e607c8352fd7?q=80&w=1000&auto=format&fit=crop",
@@ -67,12 +72,13 @@ const localDB = {
       created_at: new Date().toISOString(),
       valor: "R$ 10,00",
       quantidade_vagas: 4,
-      tipo_acesso: "Família",
-      telegram: "mariasouza",
-      whatsapp: "5511912345678"
+      tipo_envio: "convite" as const,
+      telegram: "@mariasouza",
+      whatsapp: "+5511912345678"
     },
     {
       id: "3",
+      codigo: "SF10003",
       titulo: "Disney+ Compartilhado",
       descricao: "Acesso a filmes, séries e documentários da Disney, Marvel, Star Wars e National Geographic",
       imagem: "https://images.unsplash.com/photo-1616469829581-73993eb86b02?q=80&w=1000&auto=format&fit=crop",
@@ -81,11 +87,12 @@ const localDB = {
       created_at: new Date().toISOString(),
       valor: "R$ 12,00",
       quantidade_vagas: 2,
-      tipo_acesso: "Standard",
-      whatsapp: "5511987654321"
+      tipo_envio: "login e senha" as const,
+      whatsapp: "+5511987654321"
     },
     {
       id: "4",
+      codigo: "SF10004",
       titulo: "Amazon Prime Vídeo",
       descricao: "Acesso a filmes, séries e conteúdo exclusivo da Amazon",
       imagem: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?q=80&w=1000&auto=format&fit=crop",
@@ -94,26 +101,28 @@ const localDB = {
       created_at: new Date().toISOString(),
       valor: "R$ 9,00",
       quantidade_vagas: 3,
-      tipo_acesso: "Standard",
-      telegram: "pedrooliveira",
-      whatsapp: "5511987654321"
+      tipo_envio: "ativação" as const,
+      telegram: "@pedrooliveira",
+      whatsapp: "+5511987654321"
     },
     {
       id: "5",
+      codigo: "SF10005",
       titulo: "HBO Max Compartilhado",
       descricao: "Acesso às séries e filmes da HBO, DC, Warner e muito mais",
       imagem: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?q=80&w=1000&auto=format&fit=crop",
-      status: "aprovado" as const,
+      status: "em formação" as const,
       usuario_id: "5",
       created_at: new Date().toISOString(),
       valor: "R$ 11,50",
       quantidade_vagas: 2,
-      tipo_acesso: "Premium",
-      telegram: "anasantos",
-      whatsapp: "5511987654321"
+      tipo_envio: "login e senha" as const,
+      telegram: "@anasantos",
+      whatsapp: "+5511987654321"
     },
     {
       id: "6",
+      codigo: "SF10006",
       titulo: "Apple TV+ Compartilhado",
       descricao: "Acesso a séries e filmes originais da Apple",
       imagem: "https://images.unsplash.com/photo-1580427331730-a29b4a914270?q=80&w=1000&auto=format&fit=crop",
@@ -122,8 +131,8 @@ const localDB = {
       created_at: new Date().toISOString(),
       valor: "R$ 8,00",
       quantidade_vagas: 5,
-      tipo_acesso: "Família",
-      whatsapp: "5511912345678"
+      tipo_envio: "convite" as const,
+      whatsapp: "+5511912345678"
     }
   ] as Anuncio[],
   
@@ -174,6 +183,20 @@ const localDB = {
 // Funções auxiliares para gerar IDs únicos
 const generateId = () => {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
+};
+
+// Função para gerar código único para anúncios
+const generateCode = () => {
+  const prefix = 'SF';
+  const lastAnuncio = localDB.anuncios.sort((a, b) => {
+    const aNum = parseInt(a.codigo?.replace('SF', '') || '0');
+    const bNum = parseInt(b.codigo?.replace('SF', '') || '0');
+    return bNum - aNum;
+  })[0];
+  
+  const lastNumber = lastAnuncio?.codigo ? parseInt(lastAnuncio.codigo.replace('SF', '')) : 10000;
+  const nextNumber = lastNumber + 1;
+  return `${prefix}${nextNumber}`;
 };
 
 // Função para configurar o banco de dados
@@ -263,6 +286,11 @@ export const addUsuario = async (usuario: Omit<Usuario, 'id' | 'created_at'>) =>
     };
     
     localDB.usuarios.push(newUsuario);
+    
+    // Log da operação (simula o envio para a planilha do Google)
+    console.log('Novo usuário adicionado:', newUsuario);
+    console.log('Em produção, este usuário seria adicionado à planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+    
     return newUsuario;
   } catch (error) {
     console.error('Erro ao adicionar usuário:', error);
@@ -282,6 +310,11 @@ export const updateUsuario = async (id: string, data: Partial<Omit<Usuario, 'id'
         ...localDB.usuarios[index],
         ...data
       };
+      
+      // Log da operação (simula o envio para a planilha do Google)
+      console.log('Usuário atualizado:', localDB.usuarios[index]);
+      console.log('Em produção, este usuário seria atualizado na planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      
       return localDB.usuarios[index];
     }
     throw new Error('Usuário não encontrado');
@@ -299,7 +332,13 @@ export const deleteUsuario = async (id: string) => {
     
     const index = localDB.usuarios.findIndex(u => u.id === id);
     if (index !== -1) {
+      const deletedUser = localDB.usuarios[index];
       localDB.usuarios.splice(index, 1);
+      
+      // Log da operação (simula o envio para a planilha do Google)
+      console.log('Usuário excluído:', deletedUser);
+      console.log('Em produção, este usuário seria removido da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      
       return true;
     }
     throw new Error('Usuário não encontrado');
@@ -318,10 +357,16 @@ export const addAnuncio = async (anuncio: Omit<Anuncio, 'id' | 'created_at'>) =>
     const newAnuncio: Anuncio = {
       ...anuncio,
       id: generateId(),
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      codigo: anuncio.codigo || generateCode()
     };
     
     localDB.anuncios.push(newAnuncio);
+    
+    // Log da operação (simula o envio para a planilha do Google)
+    console.log('Novo anúncio adicionado:', newAnuncio);
+    console.log('Em produção, este anúncio seria adicionado à planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+    
     return newAnuncio;
   } catch (error) {
     console.error('Erro ao adicionar anúncio:', error);
@@ -341,6 +386,11 @@ export const updateAnuncio = async (id: string, data: Partial<Omit<Anuncio, 'id'
         ...localDB.anuncios[index],
         ...data
       };
+      
+      // Log da operação (simula o envio para a planilha do Google)
+      console.log('Anúncio atualizado:', localDB.anuncios[index]);
+      console.log('Em produção, este anúncio seria atualizado na planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      
       return localDB.anuncios[index];
     }
     throw new Error('Anúncio não encontrado');
@@ -358,7 +408,13 @@ export const deleteAnuncio = async (id: string) => {
     
     const index = localDB.anuncios.findIndex(a => a.id === id);
     if (index !== -1) {
+      const deletedAnuncio = localDB.anuncios[index];
       localDB.anuncios.splice(index, 1);
+      
+      // Log da operação (simula o envio para a planilha do Google)
+      console.log('Anúncio excluído:', deletedAnuncio);
+      console.log('Em produção, este anúncio seria removido da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      
       return true;
     }
     throw new Error('Anúncio não encontrado');
@@ -395,6 +451,11 @@ export const addContato = async (contato: Omit<Contato, 'id' | 'created_at' | 's
     };
     
     localDB.contatos.push(newContato);
+    
+    // Log da operação (simula o envio para a planilha do Google)
+    console.log('Nova mensagem de contato adicionada:', newContato);
+    console.log('Em produção, esta mensagem seria adicionada à planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+    
     return newContato;
   } catch (error) {
     console.error('Erro ao adicionar contato:', error);
@@ -411,6 +472,11 @@ export const updateContatoStatus = async (id: string, status: 'lido' | 'não lid
     const index = localDB.contatos.findIndex(c => c.id === id);
     if (index !== -1) {
       localDB.contatos[index].status = status;
+      
+      // Log da operação (simula o envio para a planilha do Google)
+      console.log('Status do contato atualizado:', localDB.contatos[index]);
+      console.log('Em produção, esta mensagem seria atualizada na planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      
       return localDB.contatos[index];
     }
     throw new Error('Mensagem de contato não encontrada');
@@ -428,7 +494,13 @@ export const deleteContato = async (id: string) => {
     
     const index = localDB.contatos.findIndex(c => c.id === id);
     if (index !== -1) {
+      const deletedContato = localDB.contatos[index];
       localDB.contatos.splice(index, 1);
+      
+      // Log da operação (simula o envio para a planilha do Google)
+      console.log('Mensagem de contato excluída:', deletedContato);
+      console.log('Em produção, esta mensagem seria removida da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      
       return true;
     }
     throw new Error('Mensagem de contato não encontrada');

@@ -11,6 +11,18 @@ interface SubscriptionItemProps {
 }
 
 const SubscriptionItem: React.FC<SubscriptionItemProps> = ({ anuncio }) => {
+  // Função para obter a cor do badge de acordo com o status
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'assinado':
+        return 'bg-green-100 text-green-800';
+      case 'em formação':
+        return 'bg-amber-100 text-amber-800';
+      default:
+        return 'bg-blue-50 text-blue-600';
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow">
       <div className="h-48 overflow-hidden bg-gray-100">
@@ -38,9 +50,18 @@ const SubscriptionItem: React.FC<SubscriptionItemProps> = ({ anuncio }) => {
         </p>
         <div className="text-sm text-gray-500 space-y-1">
           <div className="flex justify-between">
-            <span>Tipo de acesso:</span>
-            <span className="font-medium">{anuncio.tipo_acesso || "N/A"}</span>
+            <span>Status:</span>
+            <Badge variant="outline" className={getStatusBadgeColor(anuncio.status)}>
+              {anuncio.status === 'em formação' ? 'Em formação' : 
+               anuncio.status === 'assinado' ? 'Assinado' : 'Disponível'}
+            </Badge>
           </div>
+          {anuncio.tipo_envio && (
+            <div className="flex justify-between">
+              <span>Envio:</span>
+              <span className="font-medium">{anuncio.tipo_envio}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span>Vagas:</span>
             <span className="font-medium">{anuncio.quantidade_vagas || 0}</span>

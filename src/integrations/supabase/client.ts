@@ -1,6 +1,7 @@
 
 // Este arquivo mantém a interface do Supabase para compatibilidade com código existente
-// mas agora está usando apenas o banco de dados em memória
+// mas agora está usando apenas o banco de dados em memória e integração com Google Sheets
+// Link da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing
 
 const mockClient = {
   auth: {
@@ -78,4 +79,6 @@ const mockClient = {
 };
 
 // Este é um cliente fictício que não faz nada, já que usaremos o banco de dados em memória
+// Os dados são salvos localmente e simulam a persistência. Em um ambiente de produção,
+// essas operações seriam feitas em um banco de dados real ou na planilha do Google.
 export const supabase = mockClient;

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { Navbar } from "@/components/ui/navbar";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { addAnuncio } from "@/utils/databaseUtils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Função para gerar código único
 const gerarCodigo = () => {
@@ -26,10 +28,14 @@ const anuncioSchema = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   descricao: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
   valor: z.string().min(1, "Valor é obrigatório"),
+  status: z.enum(["assinado", "em formação"], {
+    required_error: "Selecione o status do anúncio",
+  }),
+  tipo_envio: z.enum(["login e senha", "ativação", "convite"], {
+    required_error: "Selecione o tipo de envio",
+  }),
   quantidade_vagas: z.coerce.number()
     .refine((val) => !isNaN(val) && val > 0, "Quantidade deve ser um número positivo"),
-  tipo_acesso: z.string().min(1, "Tipo de acesso é obrigatório"),
-  pix: z.string().optional(),
   telegram: z.string()
     .regex(/^@[a-zA-Z0-9_]{5,}$/, "Formato inválido. Use @username")
     .optional()
@@ -56,9 +62,9 @@ const AnuncioFormPage = () => {
       titulo: "",
       descricao: "",
       valor: "",
+      status: "em formação" as const,
+      tipo_envio: "login e senha" as const,
       quantidade_vagas: 1,
-      tipo_acesso: "",
-      pix: "",
       telegram: "",
       whatsapp: "",
       imagem: "",
@@ -75,24 +81,31 @@ const AnuncioFormPage = () => {
     try {
       setIsSubmitting(true);
       
+      // Formatação do valor para garantir o formato R$
+      const valorFormatado = data.valor.startsWith('R$') 
+        ? data.valor 
+        : `R$ ${data.valor}`;
+      
       // Preparar objeto para inserção no banco de dados
       await addAnuncio({
         titulo: data.titulo,
         descricao: data.descricao,
-        valor: data.valor,
+        valor: valorFormatado,
         quantidade_vagas: data.quantidade_vagas,
-        tipo_acesso: data.tipo_acesso,
-        pix: data.pix || null,
+        status: userProfile?.classe === 'administrador' ? 'aprovado' : 'pendente',
+        tipo_envio: data.tipo_envio,
         telegram: data.telegram || null,
         whatsapp: data.whatsapp || null,
         imagem: data.imagem || null,
-        status: 'pendente',
         usuario_id: user.id,
         codigo: codigo,
         data_criacao: new Date().toISOString().split('T')[0],
       });
       
-      toast.success("Anúncio enviado com sucesso! Aguarde aprovação.");
+      toast.success(userProfile?.classe === 'administrador' 
+        ? "Anúncio publicado com sucesso!" 
+        : "Anúncio enviado com sucesso! Aguarde aprovação."
+      );
       navigate("/");
     } catch (error: any) {
       console.error("Erro completo:", error);
@@ -146,34 +159,41 @@ const AnuncioFormPage = () => {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="titulo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Título do Anúncio *</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="valor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Valor *</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div>
+                      <p className="text-sm font-medium mb-2">Código</p>
+                      <Input 
+                        value={codigo}
+                        disabled
+                        className="bg-gray-100 font-mono"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Código gerado automaticamente</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium mb-2">Data</p>
+                      <Input 
+                        type="date" 
+                        value={dataAtual}
+                        disabled
+                        className="bg-gray-100"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Data atual preenchida automaticamente</p>
+                    </div>
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="titulo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título *</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
                   <FormField
                     control={form.control}
@@ -192,6 +212,20 @@ const AnuncioFormPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
+                      name="valor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Valor *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="R$ 0,00" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
                       name="quantidade_vagas"
                       render={({ field }) => (
                         <FormItem>
@@ -203,16 +237,49 @@ const AnuncioFormPage = () => {
                         </FormItem>
                       )}
                     />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="assinado">Assinado</SelectItem>
+                              <SelectItem value="em formação">Em formação</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     
                     <FormField
                       control={form.control}
-                      name="tipo_acesso"
+                      name="tipo_envio"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Tipo de Acesso *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Ex: Conta principal, perfil adicional" />
-                          </FormControl>
+                          <FormLabel>Tipo de Envio *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo de envio" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="login e senha">Login e Senha</SelectItem>
+                              <SelectItem value="ativação">Ativação</SelectItem>
+                              <SelectItem value="convite">Convite</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -220,44 +287,6 @@ const AnuncioFormPage = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium mb-2">Data</p>
-                      <Input 
-                        type="date" 
-                        value={dataAtual}
-                        disabled
-                        className="bg-gray-100"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Data atual preenchida automaticamente</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm font-medium mb-2">Código</p>
-                      <Input 
-                        value={codigo}
-                        disabled
-                        className="bg-gray-100 font-mono"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Código gerado automaticamente</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="pix"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Chave PIX</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormDescription>Opcional</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
                     <FormField
                       control={form.control}
                       name="telegram"

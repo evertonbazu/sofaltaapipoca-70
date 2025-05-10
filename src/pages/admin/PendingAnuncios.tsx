@@ -1,3 +1,4 @@
+
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +8,9 @@ import { Loader } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Anuncio, Usuario } from "@/types/databaseTypes";
+import { Anuncio } from "@/types/databaseTypes";
 import { fetchAnuncios, updateAnuncio } from "@/utils/databaseUtils";
+import { Badge } from "@/components/ui/badge";
 
 // Definir o tipo AnuncioWithUsuario para corresponder exatamente ao formato dos dados retornados pela API
 type AnuncioWithUsuario = {
@@ -16,18 +18,19 @@ type AnuncioWithUsuario = {
   titulo: string;
   descricao: string;
   imagem?: string;
-  status: 'pendente' | 'aprovado' | 'rejeitado';
+  status: 'pendente' | 'aprovado' | 'rejeitado' | 'assinado' | 'em formação';
   usuario_id: string;
   created_at?: string;
   valor?: string;
   quantidade_vagas?: number;
   tipo_acesso?: string;
+  tipo_envio?: 'login e senha' | 'ativação' | 'convite';
   pix?: string;
   data_criacao?: string;
   codigo?: string;
   telegram?: string;
   whatsapp?: string;
-  usuarios?: { nome?: string; email?: string };
+  usuarios?: { nome?: string; email?: string; };
 };
 
 const PendingAnuncios = () => {
@@ -53,10 +56,21 @@ const PendingAnuncios = () => {
     try {
       setIsProcessing(true);
       
-      await updateAnuncio(id, { status: 'aprovado' });
+      // Ao aprovar, mantemos qualquer status específico como assinado ou em formação
+      // Se não tiver, definimos como aprovado
+      const anuncio = pendingAnuncios?.find(a => a.id === id);
+      const newStatus = anuncio?.status === 'assinado' || anuncio?.status === 'em formação' 
+        ? anuncio.status 
+        : 'aprovado';
+      
+      await updateAnuncio(id, { status: newStatus });
       
       toast.success("Anúncio aprovado com sucesso!");
+      
+      // Importante: invalidamos as queries para atualizar tanto a lista de pendentes quanto a página inicial
       queryClient.invalidateQueries({ queryKey: ['pendingAnuncios'] });
+      queryClient.invalidateQueries({ queryKey: ['anuncios'] });
+      
       setIsDialogOpen(false);
     } catch (error: any) {
       toast.error("Erro ao aprovar anúncio: " + error.message);
@@ -105,8 +119,10 @@ const PendingAnuncios = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Código</TableHead>
                     <TableHead>Título</TableHead>
                     <TableHead>Autor</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
@@ -114,8 +130,22 @@ const PendingAnuncios = () => {
                 <TableBody>
                   {pendingAnuncios.map((anuncio) => (
                     <TableRow key={anuncio.id}>
+                      <TableCell className="font-mono text-xs">{anuncio.codigo}</TableCell>
                       <TableCell className="font-medium">{anuncio.titulo}</TableCell>
                       <TableCell>{anuncio.usuarios?.nome || 'Usuário desconhecido'}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={`
+                            ${anuncio.status === 'assinado' ? 'bg-green-100 text-green-800' : 
+                              anuncio.status === 'em formação' ? 'bg-amber-100 text-amber-800' : 
+                              'bg-yellow-100 text-yellow-800'}
+                          `}
+                        >
+                          {anuncio.status === 'em formação' ? 'Em formação' : 
+                           anuncio.status === 'assinado' ? 'Assinado' : 'Pendente'}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         {new Date(anuncio.created_at || '').toLocaleDateString()}
                       </TableCell>
@@ -169,6 +199,11 @@ const PendingAnuncios = () => {
           {selectedAnuncio && (
             <div className="space-y-4">
               <div>
+                <h3 className="font-semibold">Código</h3>
+                <p className="font-mono">{selectedAnuncio.codigo}</p>
+              </div>
+              
+              <div>
                 <h3 className="font-semibold">Título</h3>
                 <p>{selectedAnuncio.titulo}</p>
               </div>
@@ -176,6 +211,52 @@ const PendingAnuncios = () => {
               <div>
                 <h3 className="font-semibold">Descrição</h3>
                 <p className="whitespace-pre-line">{selectedAnuncio.descricao}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold">Valor</h3>
+                  <p>{selectedAnuncio.valor || 'Não informado'}</p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold">Status</h3>
+                  <Badge 
+                    variant="outline" 
+                    className={`
+                      ${selectedAnuncio.status === 'assinado' ? 'bg-green-100 text-green-800' : 
+                        selectedAnuncio.status === 'em formação' ? 'bg-amber-100 text-amber-800' : 
+                        'bg-yellow-100 text-yellow-800'}
+                    `}
+                  >
+                    {selectedAnuncio.status === 'em formação' ? 'Em formação' : 
+                     selectedAnuncio.status === 'assinado' ? 'Assinado' : 'Pendente'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold">Tipo de Envio</h3>
+                  <p>{selectedAnuncio.tipo_envio || 'Não informado'}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold">Vagas</h3>
+                  <p>{selectedAnuncio.quantidade_vagas || 'Não informado'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold">Telegram</h3>
+                  <p>{selectedAnuncio.telegram || 'Não informado'}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold">WhatsApp</h3>
+                  <p>{selectedAnuncio.whatsapp || 'Não informado'}</p>
+                </div>
               </div>
               
               {selectedAnuncio.imagem && (

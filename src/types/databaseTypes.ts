@@ -12,7 +12,7 @@ export interface Anuncio {
   titulo: string;
   descricao: string;
   imagem?: string;
-  status: 'pendente' | 'aprovado' | 'rejeitado';
+  status: 'pendente' | 'aprovado' | 'rejeitado' | 'assinado' | 'em formação';
   usuario_id: string;
   created_at?: string;
   valor?: string;
@@ -23,6 +23,7 @@ export interface Anuncio {
   codigo?: string;
   telegram?: string;
   whatsapp?: string;
+  tipo_envio?: 'login e senha' | 'ativação' | 'convite';
   // Adding relation for TypeScript to recognize nested queries
   usuarios?: { nome: string; email: string; };
 }
