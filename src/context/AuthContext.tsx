@@ -51,62 +51,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Simula lógica de autenticação com o banco de dados em memória
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    // Verificar se há um usuário no localStorage
+    const savedUserData = localStorage.getItem('currentUser');
+    
+    if (savedUserData) {
+      try {
+        const userData = JSON.parse(savedUserData);
+        const mockSession = { user: userData, expires_at: 9999999999 };
+        setSession(mockSession as Session);
+        setUser(userData as User);
         
-        // Usar setTimeout para evitar recursão no callback
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
-        } else {
-          setUserProfile(null);
-          setIsAdmin(false);
-        }
+        // Buscar o perfil do usuário
+        fetchUserProfile(userData.id);
+      } catch (error) {
+        console.error('Erro ao recuperar usuário do localStorage:', error);
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    
+    setIsLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
       
-      // Verificar se o usuário já existe no nosso banco de dados local
+      // Verificar se o usuário existe no banco de dados local
       const existingUser = await fetchUsuarioByEmail(email);
       
-      // Se o usuário não existir no banco local, cria-lo automaticamente
       if (!existingUser) {
-        // Usuário logou mas não está no banco local (caso específico)
-        // Vamos criar um registro para ele como membro comum
-        await addUsuario({
-          email,
-          nome: 'Usuário',
-          classe: email === 'evertonbazu@gmail.com' ? 'administrador' : 'membro',
-        });
+        throw new Error('Usuário não encontrado');
       }
+      
+      // Simular autenticação (em um sistema real, verificaria a senha)
+      const mockUser = {
+        id: existingUser.id,
+        email: existingUser.email,
+        user_metadata: {
+          nome: existingUser.nome
+        }
+      };
+      
+      // Salvar usuário no localStorage para persistência
+      localStorage.setItem('currentUser', JSON.stringify(mockUser));
+      
+      // Atualizar o estado
+      setUser(mockUser as User);
+      setUserProfile(existingUser);
+      setIsAdmin(existingUser.classe === 'administrador');
       
       toast.success('Login realizado com sucesso!');
       navigate('/');
@@ -120,19 +113,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, nome: string) => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nome
-          },
-        },
-      });
-
-      if (error) throw error;
       
-      // Criar o usuário no nosso banco de dados local
+      // Verificar se o usuário já existe
+      const existingUser = await fetchUsuarioByEmail(email);
+      
+      if (existingUser) {
+        throw new Error('Este email já está em uso');
+      }
+      
+      // Criar um novo ID para o usuário
+      const userId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      
+      // Adicionar o usuário ao banco de dados local
       await addUsuario({
         email,
         nome,
@@ -151,7 +143,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      
+      // Remover usuário do localStorage
+      localStorage.removeItem('currentUser');
+      
+      // Limpar o estado
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      setIsAdmin(false);
+      
       toast.success('Logout realizado com sucesso!');
       navigate('/');
     } catch (error: any) {

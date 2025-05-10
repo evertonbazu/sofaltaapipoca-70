@@ -1,5 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { Usuario, Anuncio, Contato } from '@/types/databaseTypes';
 
 // Banco de dados em memória para armazenar os dados da aplicação
@@ -23,6 +22,20 @@ const localDB = {
       id: "3",
       email: "usuario2@exemplo.com",
       nome: "Maria Souza",
+      classe: "membro" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "4",
+      email: "usuario3@exemplo.com",
+      nome: "Pedro Oliveira",
+      classe: "membro" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "5",
+      email: "usuario4@exemplo.com",
+      nome: "Ana Santos",
       classe: "membro" as const,
       created_at: new Date().toISOString()
     }
@@ -62,6 +75,7 @@ const localDB = {
       id: "3",
       titulo: "Disney+ Compartilhado",
       descricao: "Acesso a filmes, séries e documentários da Disney, Marvel, Star Wars e National Geographic",
+      imagem: "https://images.unsplash.com/photo-1616469829581-73993eb86b02?q=80&w=1000&auto=format&fit=crop",
       status: "pendente" as const,
       usuario_id: "2",
       created_at: new Date().toISOString(),
@@ -69,6 +83,47 @@ const localDB = {
       quantidade_vagas: 2,
       tipo_acesso: "Standard",
       whatsapp: "5511987654321"
+    },
+    {
+      id: "4",
+      titulo: "Amazon Prime Vídeo",
+      descricao: "Acesso a filmes, séries e conteúdo exclusivo da Amazon",
+      imagem: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?q=80&w=1000&auto=format&fit=crop",
+      status: "aprovado" as const,
+      usuario_id: "4",
+      created_at: new Date().toISOString(),
+      valor: "R$ 9,00",
+      quantidade_vagas: 3,
+      tipo_acesso: "Standard",
+      telegram: "pedrooliveira",
+      whatsapp: "5511987654321"
+    },
+    {
+      id: "5",
+      titulo: "HBO Max Compartilhado",
+      descricao: "Acesso às séries e filmes da HBO, DC, Warner e muito mais",
+      imagem: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?q=80&w=1000&auto=format&fit=crop",
+      status: "aprovado" as const,
+      usuario_id: "5",
+      created_at: new Date().toISOString(),
+      valor: "R$ 11,50",
+      quantidade_vagas: 2,
+      tipo_acesso: "Premium",
+      telegram: "anasantos",
+      whatsapp: "5511987654321"
+    },
+    {
+      id: "6",
+      titulo: "Apple TV+ Compartilhado",
+      descricao: "Acesso a séries e filmes originais da Apple",
+      imagem: "https://images.unsplash.com/photo-1580427331730-a29b4a914270?q=80&w=1000&auto=format&fit=crop",
+      status: "pendente" as const,
+      usuario_id: "3",
+      created_at: new Date().toISOString(),
+      valor: "R$ 8,00",
+      quantidade_vagas: 5,
+      tipo_acesso: "Família",
+      whatsapp: "5511912345678"
     }
   ] as Anuncio[],
   
@@ -86,6 +141,30 @@ const localDB = {
       nome: "Ana Paula",
       email: "ana@exemplo.com",
       mensagem: "Estou com problemas para acessar minha conta",
+      status: "lido" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "3",
+      nome: "Roberto Alves",
+      email: "roberto@exemplo.com",
+      mensagem: "Como posso anunciar no site?",
+      status: "não lido" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "4",
+      nome: "Fernanda Lima",
+      email: "fernanda@exemplo.com",
+      mensagem: "Queria tirar uma dúvida sobre os pagamentos",
+      status: "não lido" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "5",
+      nome: "Gabriel Mendes",
+      email: "gabriel@exemplo.com",
+      mensagem: "Estou interessado em divulgar meu serviço no site",
       status: "lido" as const,
       created_at: new Date().toISOString()
     }
@@ -108,7 +187,7 @@ export const fetchUsuarios = async () => {
   try {
     // Simulando um atraso de rede
     await new Promise(resolve => setTimeout(resolve, 300));
-    return localDB.usuarios;
+    return [...localDB.usuarios];
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
     throw error;

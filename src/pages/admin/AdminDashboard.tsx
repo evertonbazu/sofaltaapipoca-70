@@ -2,57 +2,28 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader } from "lucide-react";
+import { fetchUsuarios, fetchAnuncios, fetchContatos } from "@/utils/databaseUtils";
 
 const AdminDashboard = () => {
-  const { data: usuariosCount, isLoading: isLoadingUsuarios } = useQuery({
-    queryKey: ['usuariosCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('usuarios')
-        .select('*', { count: 'exact', head: true });
-      
-      if (error) throw error;
-      return count || 0;
-    }
+  const { data: usuarios, isLoading: isLoadingUsuarios } = useQuery({
+    queryKey: ['usuarios'],
+    queryFn: fetchUsuarios
   });
 
-  const { data: anunciosCount, isLoading: isLoadingAnuncios } = useQuery({
-    queryKey: ['anunciosCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('anuncios')
-        .select('*', { count: 'exact', head: true });
-      
-      if (error) throw error;
-      return count || 0;
-    }
+  const { data: anuncios, isLoading: isLoadingAnuncios } = useQuery({
+    queryKey: ['anuncios'],
+    queryFn: () => fetchAnuncios()
   });
 
-  const { data: pendingCount, isLoading: isLoadingPending } = useQuery({
-    queryKey: ['pendingCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('anuncios')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pendente');
-      
-      if (error) throw error;
-      return count || 0;
-    }
+  const { data: pendingAnuncios, isLoading: isLoadingPending } = useQuery({
+    queryKey: ['pendingAnuncios'],
+    queryFn: () => fetchAnuncios('pendente')
   });
 
-  const { data: contatosCount, isLoading: isLoadingContatos } = useQuery({
-    queryKey: ['contatosCount'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('contato')
-        .select('*', { count: 'exact', head: true });
-      
-      if (error) throw error;
-      return count || 0;
-    }
+  const { data: contatos, isLoading: isLoadingContatos } = useQuery({
+    queryKey: ['contatos'],
+    queryFn: fetchContatos
   });
 
   const isLoading = isLoadingUsuarios || isLoadingAnuncios || isLoadingPending || isLoadingContatos;
@@ -75,7 +46,7 @@ const AdminDashboard = () => {
               <CardTitle className="text-sm font-medium text-gray-500">Usuários Cadastrados</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{usuariosCount || 0}</p>
+              <p className="text-3xl font-bold">{usuarios ? usuarios.length : 0}</p>
             </CardContent>
           </Card>
           
@@ -84,7 +55,7 @@ const AdminDashboard = () => {
               <CardTitle className="text-sm font-medium text-gray-500">Total de Anúncios</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{anunciosCount || 0}</p>
+              <p className="text-3xl font-bold">{anuncios ? anuncios.length : 0}</p>
             </CardContent>
           </Card>
           
@@ -93,7 +64,7 @@ const AdminDashboard = () => {
               <CardTitle className="text-sm font-medium text-gray-500">Anúncios Pendentes</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{pendingCount || 0}</p>
+              <p className="text-3xl font-bold">{pendingAnuncios ? pendingAnuncios.length : 0}</p>
             </CardContent>
           </Card>
           
@@ -102,7 +73,7 @@ const AdminDashboard = () => {
               <CardTitle className="text-sm font-medium text-gray-500">Mensagens de Contato</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{contatosCount || 0}</p>
+              <p className="text-3xl font-bold">{contatos ? contatos.length : 0}</p>
             </CardContent>
           </Card>
         </div>
