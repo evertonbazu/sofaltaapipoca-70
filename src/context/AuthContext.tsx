@@ -11,9 +11,11 @@ export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAdmin: boolean;
+  userProfile: Usuario | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, nome: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +25,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState<Usuario | null>(null);
   const navigate = useNavigate();
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar perfil do usuário:', error);
+        return;
+      }
+
+      setUserProfile(data);
+      setIsAdmin(data?.classe === 'administrador');
+    } catch (error) {
+      console.error('Erro ao buscar perfil do usuário:', error);
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    if (user) {
+      await fetchUserProfile(user.id);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -31,7 +60,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       (_, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        checkUserRole(session?.user?.id);
+        
+        // Usar setTimeout para evitar recursão no callback
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setUserProfile(null);
+          setIsAdmin(false);
+        }
       }
     );
 
@@ -39,38 +77,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      checkUserRole(session?.user?.id);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
       setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkUserRole = async (userId: string | undefined) => {
-    if (!userId) {
-      setIsAdmin(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('classe')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Erro ao verificar papel do usuário:', error);
-        setIsAdmin(false);
-        return;
-      }
-
-      setIsAdmin(data?.classe === 'administrador');
-    } catch (error) {
-      console.error('Erro ao verificar papel do usuário:', error);
-      setIsAdmin(false);
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -150,9 +165,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user, 
       isLoading, 
       isAdmin,
+      userProfile,
       signIn, 
       signUp, 
-      signOut 
+      signOut,
+      refreshUserProfile 
     }}>
       {children}
     </AuthContext.Provider>

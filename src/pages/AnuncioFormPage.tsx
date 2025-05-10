@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,7 +82,7 @@ const AnuncioFormPage = () => {
         titulo: data.titulo,
         descricao: data.descricao,
         valor: data.valor,
-        quantidade_vagas: data.quantidade_vagas, // Now properly typed as a number
+        quantidade_vagas: data.quantidade_vagas,
         tipo_acesso: data.tipo_acesso,
         pix: data.pix || null,
         telegram: data.telegram || null,
@@ -102,7 +103,8 @@ const AnuncioFormPage = () => {
       toast.success("Anúncio enviado com sucesso! Aguarde aprovação.");
       navigate("/");
     } catch (error: any) {
-      toast.error("Erro ao enviar anúncio: " + error.message);
+      console.error("Erro completo:", error);
+      toast.error("Erro ao enviar anúncio: " + (error.message || "Erro desconhecido"));
     } finally {
       setIsSubmitting(false);
     }
