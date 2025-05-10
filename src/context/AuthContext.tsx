@@ -19,6 +19,17 @@ export interface AuthContextType {
   refreshUserProfile: () => Promise<void>;
 }
 
+// Definindo uma interface local para o nosso usuário simulado 
+// que é compatível com a interface User do Supabase
+interface MockUser {
+  id: string;
+  email: string;
+  app_metadata: Record<string, any>;
+  user_metadata: { nome: string };
+  aud: string;
+  created_at: string;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -61,7 +72,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userData = JSON.parse(savedUserData);
         const mockSession = { user: userData, expires_at: 9999999999 };
         setSession(mockSession as Session);
-        setUser(userData as User);
+        
+        // Criar um usuário que seja compatível com a interface User do Supabase
+        const mockUser: MockUser = {
+          id: userData.id,
+          email: userData.email,
+          app_metadata: {},
+          user_metadata: { nome: userData.user_metadata.nome },
+          aud: 'authenticated',
+          created_at: new Date().toISOString()
+        };
+        
+        // Convertemos explicitamente para o tipo User
+        setUser(mockUser as unknown as User);
         
         // Buscar o perfil do usuário
         fetchUserProfile(userData.id);
@@ -84,20 +107,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Usuário não encontrado');
       }
       
-      // Simular autenticação (em um sistema real, verificaria a senha)
-      const mockUser = {
+      // Criar um usuário que seja compatível com a interface User do Supabase
+      const mockUser: MockUser = {
         id: existingUser.id,
         email: existingUser.email,
-        user_metadata: {
-          nome: existingUser.nome
-        }
+        app_metadata: {},
+        user_metadata: { nome: existingUser.nome },
+        aud: 'authenticated',
+        created_at: new Date().toISOString()
       };
       
       // Salvar usuário no localStorage para persistência
       localStorage.setItem('currentUser', JSON.stringify(mockUser));
       
       // Atualizar o estado
-      setUser(mockUser as User);
+      setUser(mockUser as unknown as User);
       setUserProfile(existingUser);
       setIsAdmin(existingUser.classe === 'administrador');
       
@@ -120,9 +144,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (existingUser) {
         throw new Error('Este email já está em uso');
       }
-      
-      // Criar um novo ID para o usuário
-      const userId = Math.random().toString(36).substring(2) + Date.now().toString(36);
       
       // Adicionar o usuário ao banco de dados local
       await addUsuario({

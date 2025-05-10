@@ -1,15 +1,14 @@
-
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Anuncio, Usuario } from "@/types/databaseTypes";
+import { fetchAnuncios, updateAnuncio } from "@/utils/databaseUtils";
 
 // Definir o tipo AnuncioWithUsuario para corresponder exatamente ao formato dos dados retornados pela API
 type AnuncioWithUsuario = {
@@ -40,16 +39,8 @@ const PendingAnuncios = () => {
   const { data: pendingAnuncios, isLoading } = useQuery({
     queryKey: ['pendingAnuncios'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('anuncios')
-        .select('*, usuarios(nome, email)')
-        .eq('status', 'pendente')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Convertendo para o tipo correto
-      return data as unknown as AnuncioWithUsuario[];
+      const anuncios = await fetchAnuncios('pendente');
+      return anuncios as unknown as AnuncioWithUsuario[];
     }
   });
   
@@ -62,12 +53,7 @@ const PendingAnuncios = () => {
     try {
       setIsProcessing(true);
       
-      const { error } = await supabase
-        .from('anuncios')
-        .update({ status: 'aprovado' })
-        .eq('id', id);
-      
-      if (error) throw error;
+      await updateAnuncio(id, { status: 'aprovado' });
       
       toast.success("Anúncio aprovado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['pendingAnuncios'] });
@@ -83,12 +69,7 @@ const PendingAnuncios = () => {
     try {
       setIsProcessing(true);
       
-      const { error } = await supabase
-        .from('anuncios')
-        .update({ status: 'rejeitado' })
-        .eq('id', id);
-      
-      if (error) throw error;
+      await updateAnuncio(id, { status: 'rejeitado' });
       
       toast.success("Anúncio rejeitado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['pendingAnuncios'] });

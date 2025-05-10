@@ -9,12 +9,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "@/components/ui/sonner";
 import { Loader } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/ui/navbar";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
-import { Database } from "@/integrations/supabase/types";
+import { addAnuncio } from "@/utils/databaseUtils";
 
 // Função para gerar código único
 const gerarCodigo = () => {
@@ -77,7 +76,7 @@ const AnuncioFormPage = () => {
       setIsSubmitting(true);
       
       // Preparar objeto para inserção no banco de dados
-      const novoAnuncio = {
+      await addAnuncio({
         titulo: data.titulo,
         descricao: data.descricao,
         valor: data.valor,
@@ -91,13 +90,7 @@ const AnuncioFormPage = () => {
         usuario_id: user.id,
         codigo: codigo,
         data_criacao: new Date().toISOString().split('T')[0],
-      };
-      
-      const { error } = await supabase
-        .from('anuncios')
-        .insert(novoAnuncio);
-      
-      if (error) throw error;
+      });
       
       toast.success("Anúncio enviado com sucesso! Aguarde aprovação.");
       navigate("/");

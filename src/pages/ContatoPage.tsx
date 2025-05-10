@@ -9,11 +9,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Loader } from 'lucide-react';
-import { Database } from '@/integrations/supabase/types';
 import { Navbar } from "@/components/ui/navbar";
+import { addContato } from '@/utils/databaseUtils';
 
 const contatoSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -39,35 +38,12 @@ const ContatoPage = () => {
     try {
       setIsSubmitting(true);
       
-      // Verificar se a tabela existe antes de inserir
-      const { error: checkError } = await supabase
-        .from('contato')
-        .select('id')
-        .limit(1);
-      
-      // Se a tabela não existir, criar primeiro
-      if (checkError && checkError.code === '42P01') {
-        console.log('Tabela contato não existe. Criando...');
-        const { error: createError } = await supabase
-          .rpc('create_contato_table_if_not_exists');
-        
-        if (createError) throw createError;
-      }
-      
-      // Inserir o contato - Use the properly typed insert object
-      // Instead of using Partial<Contato>, we'll create an object that matches the required Supabase schema
-      const novoContato: Database['public']['Tables']['contato']['Insert'] = {
+      // Adicionar o contato usando nossa função de banco de dados local
+      await addContato({
         nome: data.nome,
         email: data.email,
-        mensagem: data.mensagem,
-        status: 'não lido',
-      };
-      
-      const { error } = await supabase
-        .from('contato')
-        .insert(novoContato);
-      
-      if (error) throw error;
+        mensagem: data.mensagem
+      });
       
       toast.success("Mensagem enviada com sucesso! Entraremos em contato em breve.");
       form.reset();

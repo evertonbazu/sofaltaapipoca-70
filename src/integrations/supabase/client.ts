@@ -18,33 +18,42 @@ const mockClient = {
     },
     onAuthStateChange: () => {
       return { data: { subscription: { unsubscribe: () => {} } } };
+    },
+    updateUser: async () => {
+      return { error: null };
     }
   },
-  from: () => {
+  from: (table: string) => {
     return {
-      select: () => {
+      select: (columns?: string) => {
         return {
-          eq: () => {
+          eq: (column: string, value: any) => {
             return { data: null, error: null };
           },
           single: () => {
             return { data: null, error: null };
+          },
+          limit: (limit: number) => {
+            return { data: null, error: null };
+          },
+          order: (column: string, options: any) => {
+            return { data: null, error: null };
           }
         };
       },
-      insert: () => {
+      insert: (data: any) => {
         return { data: null, error: null };
       },
-      update: () => {
+      update: (data: any) => {
         return {
-          eq: () => {
+          eq: (column: string, value: any) => {
             return { data: null, error: null };
           }
         };
       },
       delete: () => {
         return {
-          eq: () => {
+          eq: (column: string, value: any) => {
             return { data: null, error: null };
           }
         };
@@ -52,16 +61,19 @@ const mockClient = {
     };
   },
   storage: {
-    from: () => {
+    from: (bucket: string) => {
       return {
-        upload: async () => {
+        upload: async (path: string, file: any) => {
           return { data: null, error: null };
         },
-        getPublicUrl: () => {
+        getPublicUrl: (path: string) => {
           return { data: { publicUrl: '' } };
         }
       };
     }
+  },
+  rpc: (func: string, params?: any) => {
+    return { data: null, error: null };
   }
 };
 
