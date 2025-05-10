@@ -25,7 +25,13 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptionRefs, s
 
       if (error) throw error;
 
-      setAnuncios(data || []);
+      // Garantir que os dados estão no formato correto
+      const typedData = data?.map(item => ({
+        ...item,
+        status: item.status as 'aprovado' | 'pendente' | 'rejeitado'
+      })) as Anuncio[];
+      
+      setAnuncios(typedData || []);
       setIsLoading(false);
     } catch (error: any) {
       console.error('Erro ao buscar anúncios:', error.message);

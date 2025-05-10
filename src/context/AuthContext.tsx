@@ -41,8 +41,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      setUserProfile(data);
-      setIsAdmin(data?.classe === 'administrador');
+      // Garantir que o tipo de classe é correto
+      const typedData: Usuario = {
+        ...data,
+        classe: data.classe as 'membro' | 'administrador'
+      };
+      
+      setUserProfile(typedData);
+      setIsAdmin(typedData.classe === 'administrador');
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
     }

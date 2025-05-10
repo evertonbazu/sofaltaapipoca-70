@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from "react";
 import { regularSubscriptions } from "@/data/subscriptions";
-import SubscriptionItem from "./SubscriptionItem";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SubscriptionCardAdapter from "./SubscriptionCardAdapter";
 
 interface RegularSubscriptionsProps {
   searchTerm?: string;
@@ -25,7 +25,7 @@ const RegularSubscriptions: React.FC<RegularSubscriptionsProps> = ({
     
     setVisibleSubscriptions(filtered);
     
-    // Atualizar hasResults se a prop estiver disponível e não tiver sido definida por FeaturedSubscriptions
+    // Atualizar hasResults se a prop estiver disponível
     if (setHasResults) {
       if (filtered.length > 0) {
         setHasResults(true);
@@ -42,7 +42,7 @@ const RegularSubscriptions: React.FC<RegularSubscriptionsProps> = ({
   return (
     <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
       {visibleSubscriptions.map((subscription, index) => (
-        <SubscriptionItem
+        <SubscriptionCardAdapter
           key={`${subscription.title}-${index}`}
           title={subscription.title}
           price={subscription.price}
