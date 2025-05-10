@@ -19,6 +19,7 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptionRefs, s
     setIsLoading(true);
     try {
       const data = await fetchAnuncios('aprovado');
+      console.log("Anúncios carregados:", data);
       setAnuncios(data || []);
       setIsLoading(false);
     } catch (error: any) {

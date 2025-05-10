@@ -18,6 +18,8 @@ const SubscriptionItem: React.FC<SubscriptionItemProps> = ({ anuncio }) => {
         return 'bg-green-100 text-green-800';
       case 'em formação':
         return 'bg-amber-100 text-amber-800';
+      case 'aprovado':
+        return 'bg-blue-50 text-blue-600';
       default:
         return 'bg-blue-50 text-blue-600';
     }

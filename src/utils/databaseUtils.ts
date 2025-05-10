@@ -52,7 +52,7 @@ const localDB = {
       titulo: "Netflix Premium",
       descricao: "Acesso completo a todas as séries e filmes do catálogo Netflix",
       imagem: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1000&auto=format&fit=crop",
-      status: "assinado" as const,
+      status: "aprovado" as const,
       usuario_id: "2",
       created_at: new Date().toISOString(),
       valor: "R$ 15,00",
@@ -111,7 +111,7 @@ const localDB = {
       titulo: "HBO Max Compartilhado",
       descricao: "Acesso às séries e filmes da HBO, DC, Warner e muito mais",
       imagem: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?q=80&w=1000&auto=format&fit=crop",
-      status: "em formação" as const,
+      status: "aprovado" as const,
       usuario_id: "5",
       created_at: new Date().toISOString(),
       valor: "R$ 11,50",
@@ -126,7 +126,7 @@ const localDB = {
       titulo: "Apple TV+ Compartilhado",
       descricao: "Acesso a séries e filmes originais da Apple",
       imagem: "https://images.unsplash.com/photo-1580427331730-a29b4a914270?q=80&w=1000&auto=format&fit=crop",
-      status: "pendente" as const,
+      status: "aprovado" as const,
       usuario_id: "3",
       created_at: new Date().toISOString(),
       valor: "R$ 8,00",
@@ -197,6 +197,22 @@ const generateCode = () => {
   const lastNumber = lastAnuncio?.codigo ? parseInt(lastAnuncio.codigo.replace('SF', '')) : 10000;
   const nextNumber = lastNumber + 1;
   return `${prefix}${nextNumber}`;
+};
+
+// Função para enviar dados para o Google Sheets
+const sendToGoogleSheets = async (data: any, sheetType: 'anuncios' | 'usuarios' | 'contatos') => {
+  try {
+    // Log showing we're sending data to Google Sheets
+    console.log(`Enviando dados para Google Sheets (${sheetType}):`, data);
+    console.log('Link da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+    
+    // Em um ambiente de produção, aqui teríamos uma chamada real para a API do Google Sheets
+    // Por enquanto, apenas simulamos o sucesso da operação
+    return true;
+  } catch (error) {
+    console.error(`Erro ao enviar para Google Sheets (${sheetType}):`, error);
+    return false;
+  }
 };
 
 // Função para configurar o banco de dados
@@ -287,9 +303,8 @@ export const addUsuario = async (usuario: Omit<Usuario, 'id' | 'created_at'>) =>
     
     localDB.usuarios.push(newUsuario);
     
-    // Log da operação (simula o envio para a planilha do Google)
-    console.log('Novo usuário adicionado:', newUsuario);
-    console.log('Em produção, este usuário seria adicionado à planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+    // Enviar para Google Sheets
+    await sendToGoogleSheets(newUsuario, 'usuarios');
     
     return newUsuario;
   } catch (error) {
@@ -311,9 +326,8 @@ export const updateUsuario = async (id: string, data: Partial<Omit<Usuario, 'id'
         ...data
       };
       
-      // Log da operação (simula o envio para a planilha do Google)
-      console.log('Usuário atualizado:', localDB.usuarios[index]);
-      console.log('Em produção, este usuário seria atualizado na planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      // Enviar para Google Sheets
+      await sendToGoogleSheets(localDB.usuarios[index], 'usuarios');
       
       return localDB.usuarios[index];
     }
@@ -335,9 +349,8 @@ export const deleteUsuario = async (id: string) => {
       const deletedUser = localDB.usuarios[index];
       localDB.usuarios.splice(index, 1);
       
-      // Log da operação (simula o envio para a planilha do Google)
-      console.log('Usuário excluído:', deletedUser);
-      console.log('Em produção, este usuário seria removido da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      // Log da operação para Google Sheets
+      console.log(`Usuário excluído (id: ${id}) - Esta operação seria refletida na planilha Google Sheets`);
       
       return true;
     }
@@ -363,9 +376,8 @@ export const addAnuncio = async (anuncio: Omit<Anuncio, 'id' | 'created_at'>) =>
     
     localDB.anuncios.push(newAnuncio);
     
-    // Log da operação (simula o envio para a planilha do Google)
-    console.log('Novo anúncio adicionado:', newAnuncio);
-    console.log('Em produção, este anúncio seria adicionado à planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+    // Enviar para Google Sheets
+    await sendToGoogleSheets(newAnuncio, 'anuncios');
     
     return newAnuncio;
   } catch (error) {
@@ -387,9 +399,8 @@ export const updateAnuncio = async (id: string, data: Partial<Omit<Anuncio, 'id'
         ...data
       };
       
-      // Log da operação (simula o envio para a planilha do Google)
-      console.log('Anúncio atualizado:', localDB.anuncios[index]);
-      console.log('Em produção, este anúncio seria atualizado na planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      // Enviar para Google Sheets
+      await sendToGoogleSheets(localDB.anuncios[index], 'anuncios');
       
       return localDB.anuncios[index];
     }
@@ -411,9 +422,8 @@ export const deleteAnuncio = async (id: string) => {
       const deletedAnuncio = localDB.anuncios[index];
       localDB.anuncios.splice(index, 1);
       
-      // Log da operação (simula o envio para a planilha do Google)
-      console.log('Anúncio excluído:', deletedAnuncio);
-      console.log('Em produção, este anúncio seria removido da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      // Log da operação para Google Sheets
+      console.log(`Anúncio excluído (id: ${id}) - Esta operação seria refletida na planilha Google Sheets`);
       
       return true;
     }
@@ -452,9 +462,8 @@ export const addContato = async (contato: Omit<Contato, 'id' | 'created_at' | 's
     
     localDB.contatos.push(newContato);
     
-    // Log da operação (simula o envio para a planilha do Google)
-    console.log('Nova mensagem de contato adicionada:', newContato);
-    console.log('Em produção, esta mensagem seria adicionada à planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+    // Enviar para Google Sheets
+    await sendToGoogleSheets(newContato, 'contatos');
     
     return newContato;
   } catch (error) {
@@ -473,9 +482,8 @@ export const updateContatoStatus = async (id: string, status: 'lido' | 'não lid
     if (index !== -1) {
       localDB.contatos[index].status = status;
       
-      // Log da operação (simula o envio para a planilha do Google)
-      console.log('Status do contato atualizado:', localDB.contatos[index]);
-      console.log('Em produção, esta mensagem seria atualizada na planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      // Enviar para Google Sheets
+      await sendToGoogleSheets(localDB.contatos[index], 'contatos');
       
       return localDB.contatos[index];
     }
@@ -497,9 +505,8 @@ export const deleteContato = async (id: string) => {
       const deletedContato = localDB.contatos[index];
       localDB.contatos.splice(index, 1);
       
-      // Log da operação (simula o envio para a planilha do Google)
-      console.log('Mensagem de contato excluída:', deletedContato);
-      console.log('Em produção, esta mensagem seria removida da planilha: https://docs.google.com/spreadsheets/d/1qerXrEzFsxZQQdfWaHQr7Ga-uI3n5ymV2FTrwaZlwYk/edit?usp=sharing');
+      // Log da operação para Google Sheets
+      console.log(`Contato excluído (id: ${id}) - Esta operação seria refletida na planilha Google Sheets`);
       
       return true;
     }

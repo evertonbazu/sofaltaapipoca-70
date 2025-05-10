@@ -29,17 +29,39 @@ const mockClient = {
       select: (columns?: string) => {
         return {
           eq: (column: string, value: any) => {
-            return { data: null, error: null };
+            return { 
+              single: () => {
+                return { data: null, error: null }; 
+              },
+              limit: (limit: number) => {
+                return { 
+                  order: (column: string, options: any) => {
+                    return { data: null, error: null };
+                  },
+                  data: null, 
+                  error: null 
+                };
+              },
+              data: null, 
+              error: null 
+            };
           },
           single: () => {
             return { data: null, error: null };
           },
           limit: (limit: number) => {
-            return { data: null, error: null };
+            return { 
+              order: (column: string, options: any) => {
+                return { data: null, error: null };
+              },
+              data: null, 
+              error: null 
+            };
           },
           order: (column: string, options: any) => {
             return { data: null, error: null };
-          }
+          },
+          data: null, error: null
         };
       },
       insert: (data: any) => {
