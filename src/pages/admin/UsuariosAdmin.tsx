@@ -1,11 +1,9 @@
-
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Usuario } from "@/types/databaseTypes";
+import { fetchUsuarios, updateUsuario, deleteUsuario } from "@/utils/databaseUtils";
 
 const updateUserSchema = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -42,15 +41,7 @@ const UsuariosAdmin = () => {
   
   const { data: usuarios, isLoading } = useQuery({
     queryKey: ['usuarios'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .order('nome');
-      
-      if (error) throw error;
-      return data as Usuario[];
-    }
+    queryFn: fetchUsuarios
   });
   
   const handleEdit = (usuario: Usuario) => {
@@ -58,7 +49,7 @@ const UsuariosAdmin = () => {
     form.reset({
       nome: usuario.nome,
       email: usuario.email,
-      classe: usuario.classe as "membro" | "administrador",
+      classe: usuario.classe,
     });
     setIsEditDialogOpen(true);
   };
@@ -69,16 +60,11 @@ const UsuariosAdmin = () => {
     try {
       setIsSubmitting(true);
       
-      const { error } = await supabase
-        .from('usuarios')
-        .update({
-          nome: formData.nome,
-          email: formData.email,
-          classe: formData.classe,
-        })
-        .eq('id', selectedUsuario.id);
-      
-      if (error) throw error;
+      await updateUsuario(selectedUsuario.id, {
+        nome: formData.nome,
+        email: formData.email,
+        classe: formData.classe,
+      });
       
       toast.success("Usuário atualizado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
@@ -96,9 +82,7 @@ const UsuariosAdmin = () => {
     }
     
     try {
-      const { error } = await supabase.auth.admin.deleteUser(id);
-      
-      if (error) throw error;
+      await deleteUsuario(id);
       
       toast.success("Usuário excluído com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });

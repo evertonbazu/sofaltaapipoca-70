@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from "@/integrations/supabase/client";
 import { Anuncio } from "@/types/databaseTypes";
 import SubscriptionItem from './SubscriptionItem';
+import { fetchAnuncios } from '@/utils/databaseUtils';
 
 interface SubscriptionListProps {
   subscriptionRefs: React.MutableRefObject<{ [key: string]: HTMLDivElement | null }>;
@@ -15,23 +15,11 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptionRefs, s
   const [isLoading, setIsLoading] = useState(true);
 
   // Função para buscar anúncios
-  const fetchAnuncios = async () => {
+  const carregarAnuncios = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('anuncios')
-        .select('*, usuarios(nome, email)')
-        .eq('status', 'aprovado');
-
-      if (error) throw error;
-
-      // Garantir que os dados estão no formato correto
-      const typedData = data?.map(item => ({
-        ...item,
-        status: item.status as 'aprovado' | 'pendente' | 'rejeitado'
-      })) as Anuncio[];
-      
-      setAnuncios(typedData || []);
+      const data = await fetchAnuncios('aprovado');
+      setAnuncios(data || []);
       setIsLoading(false);
     } catch (error: any) {
       console.error('Erro ao buscar anúncios:', error.message);
@@ -41,7 +29,7 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptionRefs, s
 
   // Carregar anúncios ao montar o componente
   useEffect(() => {
-    fetchAnuncios();
+    carregarAnuncios();
   }, []);
 
   // Filtra os anúncios com base no termo de pesquisa

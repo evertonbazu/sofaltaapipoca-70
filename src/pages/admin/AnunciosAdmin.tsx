@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -6,14 +5,12 @@ import {
   Card, CardContent, CardDescription, CardHeader, CardTitle 
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { toast } from "@/components/ui/sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Loader } from "lucide-react";
 import { 
@@ -21,12 +18,18 @@ import {
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import { Anuncio } from "@/types/databaseTypes";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { fetchAnuncios, addAnuncio, updateAnuncio, deleteAnuncio } from "@/utils/databaseUtils";
 
 const anuncioSchema = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   descricao: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
   imagem: z.string().optional(),
+  valor: z.string().optional(),
+  tipo_acesso: z.string().optional(),
+  quantidade_vagas: z.coerce.number().optional(),
+  whatsapp: z.string().optional(),
+  telegram: z.string().optional(),
 });
 
 type AnuncioFormValues = z.infer<typeof anuncioSchema>;
@@ -43,6 +46,11 @@ const AnunciosAdmin = () => {
       titulo: "",
       descricao: "",
       imagem: "",
+      valor: "",
+      tipo_acesso: "",
+      quantidade_vagas: undefined,
+      whatsapp: "",
+      telegram: "",
     },
   });
 
@@ -52,20 +60,17 @@ const AnunciosAdmin = () => {
       titulo: "",
       descricao: "",
       imagem: "",
+      valor: "",
+      tipo_acesso: "",
+      quantidade_vagas: undefined,
+      whatsapp: "",
+      telegram: "",
     },
   });
 
   const { data: anuncios, isLoading, refetch } = useQuery({
     queryKey: ['anuncios'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('anuncios')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Anuncio[];
-    }
+    queryFn: () => fetchAnuncios()
   });
 
   const onSubmit = async (formData: AnuncioFormValues) => {
@@ -77,18 +82,19 @@ const AnunciosAdmin = () => {
     try {
       setIsSubmitting(true);
       
-      const { error } = await supabase
-        .from('anuncios')
-        .insert([{
-          titulo: formData.titulo,
-          descricao: formData.descricao,
-          imagem: formData.imagem || undefined,
-          status: 'aprovado', // Admins podem criar anúncios já aprovados
-          usuario_id: user.id,
-        }]);
+      await addAnuncio({
+        titulo: formData.titulo,
+        descricao: formData.descricao,
+        imagem: formData.imagem || undefined,
+        status: 'aprovado', // Admins podem criar anúncios já aprovados
+        usuario_id: user.id,
+        valor: formData.valor,
+        tipo_acesso: formData.tipo_acesso,
+        quantidade_vagas: formData.quantidade_vagas,
+        whatsapp: formData.whatsapp,
+        telegram: formData.telegram,
+      });
 
-      if (error) throw error;
-      
       toast.success("Anúncio criado com sucesso!");
       form.reset();
       refetch();
@@ -105,6 +111,11 @@ const AnunciosAdmin = () => {
       titulo: anuncio.titulo,
       descricao: anuncio.descricao,
       imagem: anuncio.imagem || '',
+      valor: anuncio.valor || '',
+      tipo_acesso: anuncio.tipo_acesso || '',
+      quantidade_vagas: anuncio.quantidade_vagas,
+      whatsapp: anuncio.whatsapp || '',
+      telegram: anuncio.telegram || '',
     });
     setIsEditDialogOpen(true);
   };
@@ -115,17 +126,17 @@ const AnunciosAdmin = () => {
     try {
       setIsSubmitting(true);
       
-      const { error } = await supabase
-        .from('anuncios')
-        .update({
-          titulo: formData.titulo,
-          descricao: formData.descricao,
-          imagem: formData.imagem || undefined,
-        })
-        .eq('id', selectedAnuncio.id);
+      await updateAnuncio(selectedAnuncio.id, {
+        titulo: formData.titulo,
+        descricao: formData.descricao,
+        imagem: formData.imagem || undefined,
+        valor: formData.valor,
+        tipo_acesso: formData.tipo_acesso,
+        quantidade_vagas: formData.quantidade_vagas,
+        whatsapp: formData.whatsapp,
+        telegram: formData.telegram,
+      });
 
-      if (error) throw error;
-      
       toast.success("Anúncio atualizado com sucesso!");
       setIsEditDialogOpen(false);
       refetch();
@@ -140,12 +151,7 @@ const AnunciosAdmin = () => {
     if (!confirm("Tem certeza que deseja excluir este anúncio?")) return;
     
     try {
-      const { error } = await supabase
-        .from('anuncios')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteAnuncio(id);
       
       toast.success("Anúncio excluído com sucesso!");
       refetch();
@@ -213,6 +219,80 @@ const AnunciosAdmin = () => {
                         <FormLabel>URL da Imagem (opcional)</FormLabel>
                         <FormControl>
                           <Input placeholder="https://exemplo.com/imagem.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="valor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Valor (opcional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="R$ 0,00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="tipo_acesso"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo de Acesso (opcional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Premium, Família, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="quantidade_vagas"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quantidade de Vagas (opcional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="0" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="whatsapp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>WhatsApp (opcional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+5511999999999" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="telegram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telegram (opcional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="@username" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -359,6 +439,80 @@ const AnunciosAdmin = () => {
                     <FormLabel>URL da Imagem (opcional)</FormLabel>
                     <FormControl>
                       <Input placeholder="https://exemplo.com/imagem.jpg" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="valor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="R$ 0,00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="tipo_acesso"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Acesso (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Premium, Família, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="quantidade_vagas"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantidade de Vagas (opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number"
+                        placeholder="0" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="whatsapp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>WhatsApp (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+5511999999999" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="telegram"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telegram (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="@username" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

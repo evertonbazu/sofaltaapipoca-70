@@ -5,6 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
 import { Usuario } from '@/types/databaseTypes';
+import { fetchUsuarioByEmail, addUsuario, fetchUsuarioById } from '@/utils/databaseUtils';
 
 export interface AuthContextType {
   session: Session | null;
@@ -30,25 +31,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Erro ao buscar perfil do usuário:', error);
+      const userData = await fetchUsuarioById(userId);
+      
+      if (!userData) {
+        console.error('Perfil de usuário não encontrado');
         return;
       }
 
-      // Garantir que o tipo de classe é correto
-      const typedData: Usuario = {
-        ...data,
-        classe: data.classe as 'membro' | 'administrador'
-      };
-      
-      setUserProfile(typedData);
-      setIsAdmin(typedData.classe === 'administrador');
+      setUserProfile(userData);
+      setIsAdmin(userData.classe === 'administrador');
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
     }
@@ -103,6 +94,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
+      // Verificar se o usuário já existe no nosso banco de dados local
+      const existingUser = await fetchUsuarioByEmail(email);
+      
+      // Se o usuário não existir no banco local, cria-lo automaticamente
+      if (!existingUser) {
+        // Usuário logou mas não está no banco local (caso específico)
+        // Vamos criar um registro para ele como membro comum
+        await addUsuario({
+          email,
+          nome: 'Usuário',
+          classe: email === 'evertonbazu@gmail.com' ? 'administrador' : 'membro',
+        });
+      }
+      
       toast.success('Login realizado com sucesso!');
       navigate('/');
     } catch (error: any) {
@@ -127,8 +132,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
-      // O trigger criado no banco de dados vai inserir automaticamente 
-      // o usuário na tabela usuarios quando ele se cadastrar
+      // Criar o usuário no nosso banco de dados local
+      await addUsuario({
+        email,
+        nome,
+        classe: email === 'evertonbazu@gmail.com' ? 'administrador' : 'membro',
+      });
       
       toast.success('Cadastro realizado com sucesso! Agora você pode fazer login.');
       navigate('/auth');

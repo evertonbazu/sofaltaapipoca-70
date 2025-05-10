@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader } from 'lucide-react';
 
 const AdminRoute = ({ children }: { children: ReactNode }) => {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin, userProfile } = useAuth();
 
   if (isLoading) {
     return (
@@ -15,7 +15,8 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (!user || !isAdmin) {
+  // Verifica se o usuário está logado e é administrador
+  if (!user || !isAdmin || !userProfile || userProfile.classe !== 'administrador') {
     return <Navigate to="/" replace />;
   }
 

@@ -1,42 +1,114 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Usuario, Anuncio, Contato } from '@/types/databaseTypes';
 
-export const setupDatabase = async () => {
-  try {
-    // Verificar/criar tabela de usuários
-    const { error: errorUsuarios } = await supabase.functions.invoke('create_tables', {
-      body: { action: 'create_usuarios_table' }
-    });
-    if (errorUsuarios) console.error('Erro ao criar tabela de usuários:', errorUsuarios);
-
-    // Verificar/criar tabela de anúncios
-    const { error: errorAnuncios } = await supabase.functions.invoke('create_tables', {
-      body: { action: 'create_anuncios_table' }
-    });
-    if (errorAnuncios) console.error('Erro ao criar tabela de anúncios:', errorAnuncios);
-
-    // Verificar/criar tabela de contato
-    const { error: errorContato } = await supabase.functions.invoke('create_tables', {
-      body: { action: 'create_contato_table' }
-    });
-    if (errorContato) console.error('Erro ao criar tabela de contato:', errorContato);
-
-    console.log('Configuração do banco de dados concluída com sucesso.');
-  } catch (error) {
-    console.error('Erro ao configurar banco de dados:', error);
-  }
+// Banco de dados em memória para armazenar os dados da aplicação
+const localDB = {
+  usuarios: [
+    {
+      id: "1",
+      email: "evertonbazu@gmail.com",
+      nome: "Everton Administrador",
+      classe: "administrador" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "2",
+      email: "usuario1@exemplo.com",
+      nome: "João Silva",
+      classe: "membro" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "3",
+      email: "usuario2@exemplo.com",
+      nome: "Maria Souza",
+      classe: "membro" as const,
+      created_at: new Date().toISOString()
+    }
+  ] as Usuario[],
+  
+  anuncios: [
+    {
+      id: "1",
+      titulo: "Netflix Premium",
+      descricao: "Acesso completo a todas as séries e filmes do catálogo Netflix",
+      imagem: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1000&auto=format&fit=crop",
+      status: "aprovado" as const,
+      usuario_id: "2",
+      created_at: new Date().toISOString(),
+      valor: "R$ 15,00",
+      quantidade_vagas: 3,
+      tipo_acesso: "Premium",
+      pix: "12345678901",
+      telegram: "joaosilva",
+      whatsapp: "5511987654321"
+    },
+    {
+      id: "2",
+      titulo: "Spotify Família",
+      descricao: "Compartilhe sua conta Spotify com até 5 pessoas",
+      imagem: "https://images.unsplash.com/photo-1611339555312-e607c8352fd7?q=80&w=1000&auto=format&fit=crop",
+      status: "aprovado" as const,
+      usuario_id: "3",
+      created_at: new Date().toISOString(),
+      valor: "R$ 10,00",
+      quantidade_vagas: 4,
+      tipo_acesso: "Família",
+      telegram: "mariasouza",
+      whatsapp: "5511912345678"
+    },
+    {
+      id: "3",
+      titulo: "Disney+ Compartilhado",
+      descricao: "Acesso a filmes, séries e documentários da Disney, Marvel, Star Wars e National Geographic",
+      status: "pendente" as const,
+      usuario_id: "2",
+      created_at: new Date().toISOString(),
+      valor: "R$ 12,00",
+      quantidade_vagas: 2,
+      tipo_acesso: "Standard",
+      whatsapp: "5511987654321"
+    }
+  ] as Anuncio[],
+  
+  contatos: [
+    {
+      id: "1",
+      nome: "Carlos Eduardo",
+      email: "carlos@exemplo.com",
+      mensagem: "Gostaria de saber mais sobre o serviço de compartilhamento",
+      status: "não lido" as const,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "2",
+      nome: "Ana Paula",
+      email: "ana@exemplo.com",
+      mensagem: "Estou com problemas para acessar minha conta",
+      status: "lido" as const,
+      created_at: new Date().toISOString()
+    }
+  ] as Contato[]
 };
 
-// Função para buscar usuários (incluindo com verificação de admin)
+// Funções auxiliares para gerar IDs únicos
+const generateId = () => {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+};
+
+// Função para configurar o banco de dados
+export const setupDatabase = async () => {
+  console.log('Banco de dados local já configurado com dados de exemplo.');
+  return true;
+};
+
+// Função para buscar usuários
 export const fetchUsuarios = async () => {
   try {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .order('nome');
-    
-    if (error) throw error;
-    return data;
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return localDB.usuarios;
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
     throw error;
@@ -46,20 +118,243 @@ export const fetchUsuarios = async () => {
 // Função para buscar anúncios
 export const fetchAnuncios = async (status?: string) => {
   try {
-    let query = supabase
-      .from('anuncios')
-      .select('*, usuarios(nome, email)');
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    let result = [...localDB.anuncios];
     
     if (status) {
-      query = query.eq('status', status);
+      result = result.filter(anuncio => anuncio.status === status);
     }
     
-    const { data, error } = await query.order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    // Adicionando informações do usuário para cada anúncio
+    return result.map(anuncio => {
+      const usuario = localDB.usuarios.find(u => u.id === anuncio.usuario_id);
+      return {
+        ...anuncio,
+        usuarios: usuario ? { nome: usuario.nome, email: usuario.email } : undefined
+      };
+    });
   } catch (error) {
     console.error('Erro ao buscar anúncios:', error);
+    throw error;
+  }
+};
+
+// Função para verificar se um usuário é administrador
+export const isUserAdmin = (email: string) => {
+  const usuario = localDB.usuarios.find(u => u.email === email);
+  return usuario?.classe === 'administrador';
+};
+
+// Função para buscar um usuário por ID
+export const fetchUsuarioById = async (id: string) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return localDB.usuarios.find(u => u.id === id) || null;
+  } catch (error) {
+    console.error('Erro ao buscar usuário por ID:', error);
+    throw error;
+  }
+};
+
+// Função para buscar um usuário por email
+export const fetchUsuarioByEmail = async (email: string) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return localDB.usuarios.find(u => u.email === email) || null;
+  } catch (error) {
+    console.error('Erro ao buscar usuário por email:', error);
+    throw error;
+  }
+};
+
+// Função para adicionar um novo usuário
+export const addUsuario = async (usuario: Omit<Usuario, 'id' | 'created_at'>) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const newUsuario: Usuario = {
+      ...usuario,
+      id: generateId(),
+      created_at: new Date().toISOString()
+    };
+    
+    localDB.usuarios.push(newUsuario);
+    return newUsuario;
+  } catch (error) {
+    console.error('Erro ao adicionar usuário:', error);
+    throw error;
+  }
+};
+
+// Função para atualizar um usuário
+export const updateUsuario = async (id: string, data: Partial<Omit<Usuario, 'id'>>) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const index = localDB.usuarios.findIndex(u => u.id === id);
+    if (index !== -1) {
+      localDB.usuarios[index] = {
+        ...localDB.usuarios[index],
+        ...data
+      };
+      return localDB.usuarios[index];
+    }
+    throw new Error('Usuário não encontrado');
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    throw error;
+  }
+};
+
+// Função para excluir um usuário
+export const deleteUsuario = async (id: string) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const index = localDB.usuarios.findIndex(u => u.id === id);
+    if (index !== -1) {
+      localDB.usuarios.splice(index, 1);
+      return true;
+    }
+    throw new Error('Usuário não encontrado');
+  } catch (error) {
+    console.error('Erro ao excluir usuário:', error);
+    throw error;
+  }
+};
+
+// Função para adicionar um novo anúncio
+export const addAnuncio = async (anuncio: Omit<Anuncio, 'id' | 'created_at'>) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const newAnuncio: Anuncio = {
+      ...anuncio,
+      id: generateId(),
+      created_at: new Date().toISOString()
+    };
+    
+    localDB.anuncios.push(newAnuncio);
+    return newAnuncio;
+  } catch (error) {
+    console.error('Erro ao adicionar anúncio:', error);
+    throw error;
+  }
+};
+
+// Função para atualizar um anúncio
+export const updateAnuncio = async (id: string, data: Partial<Omit<Anuncio, 'id'>>) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const index = localDB.anuncios.findIndex(a => a.id === id);
+    if (index !== -1) {
+      localDB.anuncios[index] = {
+        ...localDB.anuncios[index],
+        ...data
+      };
+      return localDB.anuncios[index];
+    }
+    throw new Error('Anúncio não encontrado');
+  } catch (error) {
+    console.error('Erro ao atualizar anúncio:', error);
+    throw error;
+  }
+};
+
+// Função para excluir um anúncio
+export const deleteAnuncio = async (id: string) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const index = localDB.anuncios.findIndex(a => a.id === id);
+    if (index !== -1) {
+      localDB.anuncios.splice(index, 1);
+      return true;
+    }
+    throw new Error('Anúncio não encontrado');
+  } catch (error) {
+    console.error('Erro ao excluir anúncio:', error);
+    throw error;
+  }
+};
+
+// Função para buscar mensagens de contato
+export const fetchContatos = async () => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return [...localDB.contatos];
+  } catch (error) {
+    console.error('Erro ao buscar contatos:', error);
+    throw error;
+  }
+};
+
+// Função para adicionar uma nova mensagem de contato
+export const addContato = async (contato: Omit<Contato, 'id' | 'created_at' | 'status'>) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const newContato: Contato = {
+      ...contato,
+      id: generateId(),
+      status: 'não lido',
+      created_at: new Date().toISOString()
+    };
+    
+    localDB.contatos.push(newContato);
+    return newContato;
+  } catch (error) {
+    console.error('Erro ao adicionar contato:', error);
+    throw error;
+  }
+};
+
+// Função para atualizar o status de uma mensagem de contato
+export const updateContatoStatus = async (id: string, status: 'lido' | 'não lido') => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const index = localDB.contatos.findIndex(c => c.id === id);
+    if (index !== -1) {
+      localDB.contatos[index].status = status;
+      return localDB.contatos[index];
+    }
+    throw new Error('Mensagem de contato não encontrada');
+  } catch (error) {
+    console.error('Erro ao atualizar status do contato:', error);
+    throw error;
+  }
+};
+
+// Função para excluir uma mensagem de contato
+export const deleteContato = async (id: string) => {
+  try {
+    // Simulando um atraso de rede
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const index = localDB.contatos.findIndex(c => c.id === id);
+    if (index !== -1) {
+      localDB.contatos.splice(index, 1);
+      return true;
+    }
+    throw new Error('Mensagem de contato não encontrada');
+  } catch (error) {
+    console.error('Erro ao excluir contato:', error);
     throw error;
   }
 };
